@@ -1,0 +1,11 @@
+Welcome to Mixery Addons API!
+===
+
+What's new in 1.0.0?
+- First release of Mixery!
+
+To build and start Mixery with current addon: mixerycli start
+To build this addon: mixerycli build
+
+Source code: https://github.com/MixeryOSS
+Issues tracker: https://github.com/MixeryOSS/issues-tracker/issues

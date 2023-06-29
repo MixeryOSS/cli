@@ -1,0 +1,36 @@
+{
+  "name": "@mixery/cli",
+  "version": "1.0.0",
+  "description": "Mixery command-line tool",
+  "main": "dist/index.js",
+  "scripts": {
+    "test": "node ."
+  },
+  "files": [
+    "dist/**/*.js",
+    "changelog.*.txt"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MixeryOSS/cli.git"
+  },
+  "keywords": [
+    "mixery",
+    "audio",
+    "cli",
+    "daw"
+  ],
+  "author": "nahkd123",
+  "license": "GPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/MixeryOSS/cli/issues"
+  },
+  "homepage": "https://github.com/MixeryOSS/cli#readme",
+  "dependencies": {
+    "esbuild": "^0.18.10",
+    "typescript": "^5.1.6"
+  },
+  "devDependencies": {
+    "@types/node": "^20.3.2"
+  }
+}
