@@ -4,7 +4,8 @@
   "description": "Mixery command-line tool",
   "main": "dist/index.js",
   "scripts": {
-    "test": "node ."
+    "test": "node .",
+    "build:watch": "tsc -w"
   },
   "files": [
     "dist/**/*.js",
