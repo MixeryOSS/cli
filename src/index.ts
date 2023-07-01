@@ -1,9 +1,9 @@
 import * as path from "node:path";
-import { MixeryConfigView } from "./system/MixeryConfigView";
 import { FileSystemView } from "./system/FileSystemView";
 import { newConfiguration } from "./subcommand/newConfiguration";
 import { build } from "./subcommand/build";
 import { newAddon } from "./subcommand/newAddon";
+import { runCommand } from "./utils";
 
 export namespace Logger {
     export function stage(message: string) {
@@ -39,23 +39,25 @@ for (let i = 0; i < programArgs.length; i++) {
     }
 }
 
-export type PackageOverrides = Record<string, string>;
-export const packageOverrides: PackageOverrides = {};
-if (options["package-override"]) options["package-override"].forEach(v => {
-    const [key, value] = v.split("=", 2);
-    packageOverrides[key] = value;
-});
-export function getPackage(id: string, version: string, external?: PackageOverrides, pathPrefix = ""): object {
-    const result: object = {};
-    let specifier = (external? external[id] : undefined) ?? packageOverrides[id] ?? version;
-
-    if (specifier.startsWith("file:")) specifier = `file:${pathPrefix}${specifier.substring(5)}`;
-
-    result[id] = specifier;
-    return result;
-}
-
 export const targetDir = path.resolve((options["target-dir"] ?? ["."])[0]);
+export const links: Record<string, string> = {};
+if (options["package-link"] && options["package-link"].length > 0) options["package-link"].forEach(entry => {
+    const [id, path] = entry.split(":", 2);
+    links[id] = path;
+});
+
+export async function installPackages(root: string) {
+    let fsv = new FileSystemView(root);
+    let dependencies = (await fsv.json("package.json")).dependencies;
+    let toBeLinked: string[] = [];
+
+    for (let id in dependencies) {
+        if (links[id]) toBeLinked.push(path.relative(root, links[id]));
+    }
+
+    if (toBeLinked.length > 0) await runCommand(`npm link ${toBeLinked.join(" ")}`, root);
+    await runCommand("npm install", root);
+}
 
 export const subcommands: Subcommand = {
     "new": {
