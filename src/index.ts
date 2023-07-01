@@ -4,6 +4,7 @@ import { newConfiguration } from "./subcommand/newConfiguration";
 import { build } from "./subcommand/build";
 import { newAddon } from "./subcommand/newAddon";
 import { runCommand } from "./utils";
+import { configureLink } from "./subcommand/configureLink";
 
 export namespace Logger {
     export function stage(message: string) {
@@ -65,6 +66,9 @@ export const subcommands: Subcommand = {
         "addon": newAddon,
     },
     "build": build,
+    "configure": {
+        "link": configureLink,
+    },
 };
 
 let currentSubcommand: Subcommand | SubcommandEnd = subcommands;
