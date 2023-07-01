@@ -1,5 +1,6 @@
 import * as fs from "node:fs";
 import * as esbuild from "esbuild";
+import { postcssModules, sassPlugin } from "esbuild-sass-plugin";
 import { FileSystemView } from "./FileSystemView";
 import { MixeryJson } from "./MixeryJson";
 import { Logger, installPackages, links, options } from "..";
@@ -52,7 +53,8 @@ export class MixeryConfigView extends FileSystemView {
             type: "module",
             version: "0.0.1",
             dependencies: {
-                "@mixery/engine": "^1.0.0"
+                "@mixery/engine": "^1.0.0",
+                "@mixery/ui": "^1.0.0",
             },
         });
         if (addons.length > 0) {
@@ -61,6 +63,7 @@ export class MixeryConfigView extends FileSystemView {
         }
         await fs.promises.writeFile(this.file("build/index.ts"), [
             `import * as engine from "@mixery/engine";`,
+            `import * as ui from "@mixery/ui";`,
             ``,
             `/*`,
             ` * Welcome to Mixery Digital Audio Workspace!`,
@@ -79,6 +82,10 @@ export class MixeryConfigView extends FileSystemView {
             `    }));`,
             `}`,
             ``,
+            `let view = new ui.WorkspaceView();`,
+            `view.workspace = Mixery.workspace;`,
+            `document.body.append(view.create().element);`,
+            ``,
             `globalThis.Mixery = Mixery;`,
             ``,
             `// Async main`,
@@ -96,12 +103,12 @@ export class MixeryConfigView extends FileSystemView {
         });
         await fs.promises.writeFile(this.file("build/index.html"), [
             `<!DOCTYPE html>`,
-            `<html>`,
+            `<html lang="en-US">`,
             `<head>`,
             `    <meta charset='utf-8'>`,
-            `    <meta http-equiv='X-UA-Compatible' content='IE=edge'>`,
             `    <title>Mixery</title>`,
             `    <meta name='viewport' content='width=device-width, initial-scale=1'>`,
+            `    <link rel='stylesheet' href='bundle.css'>`,
             `    <script src='bundle.js' defer></script>`,
             `</head>`,
             `<body></body>`,
@@ -123,6 +130,11 @@ export class MixeryConfigView extends FileSystemView {
             bundle: true,
             outfile: this.file("build/bundle.js"),
             entryPoints: [this.file("build/index.ts")],
+            plugins: [
+                sassPlugin({
+                    transform: postcssModules({})
+                })
+            ]
         });
     }
 }
