@@ -113,9 +113,11 @@ export class MixeryConfigView extends FileSystemView {
             return;
         }
 
-        if (logging) Logger.stage("Running 'npm install'...");
-        await installPackages(this.file("build"));
-        
+        if (!fs.existsSync(this.file("build/node_modules"))) {
+            if (logging) Logger.stage("Installing npm packages...");
+            await installPackages(this.file("build"));
+        }
+
         if (logging) Logger.stage("Running esbuild...");
         await esbuild.build({
             bundle: true,
