@@ -27,7 +27,7 @@ You can specify options by using one of these formats:
 
 ### Global options
 - ``string: target-dir``: The directory that you want to use with this CLI tool.
-- ``string: package-override``: A ``key:value`` pair, where ``key`` is the name of package you want to override and ``value`` is the package specifier (such as ``^1.0.0``, ``file:../package`` or ``git:mygitrepo``). Mainly used for testing packages.
+- ``string: package-link``: A ``key:value`` pair, where ``key`` is the name of package and ``value`` is the path to the local package that you want to use (instead of packages from npm registry).
 
 ### ``build`` options
 - ``boolean: clean``: Remove ``build/`` before build.
@@ -41,14 +41,14 @@ To handle the build process, we use something called "build configurations". The
 ```json
 {
     "type": "configuration",
-    "overrides": {
-        "@mixery/engine": "file:../engine",
-        "@mixery/uikit": "file:../uikit"
+    "links": {
+        "@mixery/engine": "../engine",
+        "@mixery/uikit": "../uikit"
     }
 }
 ```
 
-"``overrides``" field is used to replace modules from npm registry with our local copy.
+Here, we used ``"links"`` to link our local package (a.k.a packages in development) to generated npm module (which is generated in ``build/``).
 
 > Configuration created from ``mixerycli`` does _not_ contains "Mixery Essentials". If you want, you can clone [MixeryOSS/essentials](https://github.com/MixeryOSS/essentials) into ``addons/`` directory. See next section for details.
 

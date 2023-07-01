@@ -1,9 +1,8 @@
 import * as fs from "node:fs";
-import * as childProcess from "node:child_process";
 import * as esbuild from "esbuild";
 import { FileSystemView } from "./FileSystemView";
 import { MixeryJson } from "./MixeryJson";
-import { Logger, getPackage, options, packageOverrides } from "..";
+import { Logger, installPackages, links, options } from "..";
 import { AddonView } from "./AddonView";
 
 export class MixeryConfigView extends FileSystemView {
@@ -16,7 +15,7 @@ export class MixeryConfigView extends FileSystemView {
 
         await this.json("mixery.json", <MixeryConfigJson> {
             type: "configuration",
-            ...(Object.keys(packageOverrides).length > 0? { overrides: packageOverrides } : {})
+            ...(Object.keys(links).length > 0? { links: links } : {})
         });
         await fs.promises.mkdir(this.file("addons"));
     }
@@ -24,6 +23,7 @@ export class MixeryConfigView extends FileSystemView {
     async build(logging = false) {
         let addons: string[] = [];
         const config: MixeryConfigJson = await this.json("mixery.json");
+        if (config.links) Object.keys(config.links).forEach(k => links[k] = config.links[k]);
 
         if (fs.existsSync(this.file("addons"))) {
             addons = await fs.promises.readdir(this.file("addons"));
@@ -52,7 +52,7 @@ export class MixeryConfigView extends FileSystemView {
             type: "module",
             version: "0.0.1",
             dependencies: {
-                ...getPackage("@mixery/engine", "^1.0.0", config.overrides, "../")
+                "@mixery/engine": "^1.0.0"
             },
         });
         if (addons.length > 0) {
@@ -114,16 +114,7 @@ export class MixeryConfigView extends FileSystemView {
         }
 
         if (logging) Logger.stage("Running 'npm install'...");
-        await new Promise((resolve, reject) => {
-            let proc = childProcess.exec("npm install", { cwd: this.file("build") });
-            proc.stdout.pipe(process.stdout);
-            proc.stderr.pipe(process.stderr);
-            proc.on("error", reject);
-            proc.on("exit", (code, signal) => {
-                if (code != 0) reject(new Error(`Program exited with code ${code}`));
-                else resolve(null);
-            });
-        });
+        await installPackages(this.file("build"));
         
         if (logging) Logger.stage("Running esbuild...");
         await esbuild.build({

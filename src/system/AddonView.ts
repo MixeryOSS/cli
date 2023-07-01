@@ -1,10 +1,9 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
-import * as childProcess from "node:child_process";
 import * as esbuild from "esbuild";
 import { FileSystemView } from "./FileSystemView";
 import { MixeryJson } from "./MixeryJson";
-import { Logger, getPackage, options, packageOverrides } from "..";
+import { Logger, installPackages, links, options } from "..";
 
 export class AddonView extends FileSystemView {
     readonly id: string;
@@ -19,7 +18,7 @@ export class AddonView extends FileSystemView {
 
         await this.json("mixery.json", <AddonJson> {
             type: "addon",
-            ...(Object.keys(packageOverrides).length > 0? { overrides: packageOverrides } : {}),
+            ...(Object.keys(links).length > 0? { links: links } : {}),
             entryPoints: ["src/index.ts"],
             externalModules: [
                 "@mixery/engine",
@@ -39,7 +38,7 @@ export class AddonView extends FileSystemView {
                 build: "mixerycli build"
             },
             dependencies: {
-                ...getPackage("@mixery/engine", "^1.0.0", packageOverrides)
+                "@mixery/engine": "^1.0.0",
             },
         });
         await this.json("tsconfig.json", {
@@ -55,20 +54,13 @@ export class AddonView extends FileSystemView {
         await fs.promises.mkdir(this.file("src"));
         await fs.promises.copyFile(path.resolve(__dirname, "../../templates/addons/index.ts"), this.file("src/index.ts"));
         await fs.promises.copyFile(path.resolve(__dirname, "../../templates/addons/mixery-addons.d.ts"), this.file("src/mixery-addons.d.ts"));
-        await new Promise((resolve, reject) => {
-            let proc = childProcess.exec("npm install", { cwd: this.root });
-            proc.stdout.pipe(process.stdout);
-            proc.stderr.pipe(process.stderr);
-            proc.on("error", reject);
-            proc.on("exit", (code, signal) => {
-                if (code != 0) reject(new Error(`Program exited with code ${code}`));
-                else resolve(null);
-            });
-        });
+        await installPackages(this.root);
     }
 
     async build(logging = false) {
         const config: AddonJson = await this.json("mixery.json");
+        if (config.links) Object.keys(config.links).forEach(k => links[k] = config.links[k]);
+
         const packageJson = await this.json("package.json");
         
         if (fs.existsSync(this.file("build")) && (options["clean"] ?? ["false"])[0] == "true") {
